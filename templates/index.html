@@ -3,14 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Website Blocked!</title>
+    <title>Website Blocked</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 <body>
     <div class="container">
         <div class="blocked-icon">🚫</div>
         <h1>Website Blocked</h1>
+        <div class="divider"></div>
         <p>The website you are trying to reach, <strong>{{ domain }}</strong>, has been blocked.</p>
+
+        {% if pihole_reason %}
+        <div class="pihole-reason">
+            <p><strong>Reason from Pi-hole:</strong></p>
+            <p>{{ pihole_reason }}</p>
+        </div>
+        {% endif %}
+
         <p class="contact-admin">If you believe this is a mistake, please contact your administrator.</p>
     </div>
 </body>
