@@ -5,42 +5,53 @@ import os
 app = Flask(__name__)
 
 PIHOLE_API_URL = os.environ.get("PIHOLE_API_URL")
-PIHOLE_API_TOKEN = os.environ.get("PIHOLE_API_TOKEN")
+PIHOLE_PASSWORD = os.environ.get("PIHOLE_PASSWORD") # Using password now, not API token
+
+def get_pihole_session_id():
+    """Authenticates with Pi-hole API and returns a session ID (SID)."""
+    if not PIHOLE_API_URL or not PIHOLE_PASSWORD:
+        return None, "Pi-hole API URL or Password not configured."
+
+    auth_endpoint = f"{PIHOLE_API_URL}/api/auth"
+    auth_payload = {"password": PIHOLE_PASSWORD}
+
+    try:
+        response = requests.post(auth_endpoint, json=auth_payload, timeout=5, verify=False) # verify=False as before if needed
+        response.raise_for_status()
+        auth_data = response.json()
+        sid = auth_data.get("sid")
+        if sid:
+            return sid, None # Return SID and no error
+        else:
+            return None, "Pi-hole API authentication failed: SID not found in response."
+    except requests.exceptions.RequestException as e:
+        return None, f"Error authenticating with Pi-hole API: {e}"
+    except ValueError:
+        return None, "Error decoding Pi-hole API auth response (invalid JSON)."
 
 def get_pihole_block_reason(domain):
-    if not PIHOLE_API_URL or not PIHOLE_API_TOKEN:
-        return "Pi-hole API credentials not configured."
+    """Queries Pi-hole API for blocking reason using session ID."""
+    sid, auth_error = get_pihole_session_id()
+    if auth_error:
+        return auth_error
 
-    api_endpoint = f"{PIHOLE_API_URL}/api.php"
+    if not PIHOLE_API_URL or not sid: # Check for SID now
+        return "Pi-hole API credentials or session ID missing."
+
+    api_endpoint = f"{PIHOLE_API_URL}/api/domain/info/{domain}" # New endpoint for domain info
     params = {
-        "domaininfo": domain,
-        "auth": PIHOLE_API_TOKEN
+        "sid": sid # Pass SID as query parameter
     }
 
     try:
-        response = requests.get(api_endpoint, params=params, timeout=5) # Added timeout
-        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+        response = requests.get(api_endpoint, params=params, timeout=10, verify=False) # verify=False as before if needed
+        response.raise_for_status()
         data = response.json()
 
         if data.get("status") == "blocked":
-            blocking_lists = data.get(" GranadaDBGroupLists", []) # Check for lists
-            blocking_gravity = data.get("gravity", "Unknown Gravity Reason") # Gravity reason
-            blocking_regex = data.get("regex_list", []) # Check for regex rules
-            blocking_exact = data.get("exact_list", []) # Check for exact rules
-
-            reasons = []
-            if blocking_lists:
-                reasons.append(f"Blocked by lists: {', '.join(blocking_lists)}")
-            if blocking_gravity != "Unknown Gravity Reason": # Check if Gravity provided a reason
-                reasons.append(f"Blocked by Gravity: {blocking_gravity}")
-            if blocking_regex:
-                reasons.append(f"Blocked by Regex Rules: {', '.join(blocking_regex)}")
-            if blocking_exact:
-                reasons.append(f"Blocked by Exact Rules: {', '.join(blocking_exact)}")
-
-
-            if reasons:
-                return "Domain is blocked. Reasons: " + "; ".join(reasons)
+            blocking_reasons = data.get("reasons", []) # Reasons are now in a list called "reasons" in v6
+            if blocking_reasons:
+                return "Domain is blocked. Reasons: " + "; ".join(blocking_reasons)
             else:
                 return "Domain is blocked, but specific reason from Pi-hole not available."
         elif data.get("status") == "OK":
@@ -50,7 +61,7 @@ def get_pihole_block_reason(domain):
 
     except requests.exceptions.RequestException as e:
         return f"Error querying Pi-hole API: {e}"
-    except ValueError: # JSONDecodeError
+    except ValueError:
         return "Error decoding Pi-hole API response (invalid JSON)."
 
 
