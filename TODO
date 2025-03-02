@@ -1,5 +1,5 @@
 *1. Remove extra information and source of gravity block lists*
-2. Check for prodution environment of the project
-3. Try optimize resources used
-4. Ommit unneccessary warning logs
+*2. Check for prodution environment of the project*
+*3. Try optimize resources used*
+*4. Ommit unneccessary warning logs*
 5. Create a README.md and make it a public repository

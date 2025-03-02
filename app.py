@@ -1,9 +1,26 @@
+import logging
 from flask import Flask, request, render_template
 import requests
 import os
 import time
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
+
+# Configure custom access logger
+access_log = logging.getLogger('werkzeug') # Werkzeug is Flask's underlying WSGI server
+access_log.handlers.clear() # Remove default handlers to start fresh
+access_log.setLevel(logging.INFO) # Set logging level to INFO or higher
+
+# Define custom log formatter
+formatter = logging.Formatter('%(remote_addr)s - - [%(asctime)s] "%(request_url)s" %(status_code)s -') # Custom format
+
+# Create a handler that writes to stdout (Docker logs)
+import sys
+stdout_handler = logging.StreamHandler(sys.stdout)
+stdout_handler.setFormatter(formatter)
+access_log.addHandler(stdout_handler)
 
 PIHOLE_API_URL = os.environ.get("PIHOLE_API_URL")
 PIHOLE_PASSWORD = os.environ.get("PIHOLE_PASSWORD")
