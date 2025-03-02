@@ -97,9 +97,8 @@ def get_pihole_block_reason(domain):
         if "gravity" in search_data.get("search", {}):
             for gravity_entry in search_data["search"]["gravity"]:
                 list_comment = gravity_entry.get("comment")
-                list_address = gravity_entry.get("address") # List URL
-                if list_comment and list_address:
-                    reasons.append(f"Blocklist: {list_comment} ({list_address})") # List and comment
+                if list_comment:
+                    reasons.append(f"{list_comment}") # List and comment
 
 
         if reasons:

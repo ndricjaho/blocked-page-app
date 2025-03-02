@@ -1,4 +1,4 @@
-1. Remove extra information and source of gravity block lists
+*1. Remove extra information and source of gravity block lists*
 2. Check for prodution environment of the project
 3. Try optimize resources used
 4. Ommit unneccessary warning logs
