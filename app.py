@@ -4,23 +4,30 @@ import requests
 import os
 import time
 import urllib3
+import re  # Import the regular expression module
+
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 
-# Configure custom access logger
-access_log = logging.getLogger('werkzeug') # Werkzeug is Flask's underlying WSGI server
-access_log.handlers.clear() # Remove default handlers to start fresh
-access_log.setLevel(logging.INFO) # Set logging level to INFO or higher
-
-# Define custom log formatter
-formatter = logging.Formatter('%(remote_addr)s - - [%(asctime)s] "%(request_url)s" %(status_code)s -') # Custom format
-
-# Create a handler that writes to stdout (Docker logs)
+# Configure custom access logger (Werkzeug logs for static files etc.)
+access_log = logging.getLogger('werkzeug')
+access_log.handlers.clear()
+access_log.setLevel(logging.INFO)
+formatter = logging.Formatter('%(remote_addr)s - - [%(asctime)s] "%(request_url)s" %(status_code)s -')
 import sys
 stdout_handler = logging.StreamHandler(sys.stdout)
 stdout_handler.setFormatter(formatter)
 access_log.addHandler(stdout_handler)
+
+# Get logger for custom blocked domain logs
+blocked_domain_logger = logging.getLogger('blocked_domain_log') # Create a new logger
+blocked_domain_logger.setLevel(logging.INFO)
+blocked_domain_formatter = logging.Formatter('%(message)s') # Simple formatter for blocked domain log
+blocked_domain_handler = logging.StreamHandler(sys.stdout)
+blocked_domain_handler.setFormatter(blocked_domain_formatter)
+blocked_domain_logger.addHandler(blocked_domain_handler)
+
 
 PIHOLE_API_URL = os.environ.get("PIHOLE_API_URL")
 PIHOLE_PASSWORD = os.environ.get("PIHOLE_PASSWORD")
@@ -108,14 +115,14 @@ def get_pihole_block_reason(domain):
             for domain_entry in search_data["search"]["domains"]:
                 comment = domain_entry.get("comment")
                 if comment:
-                    reasons.append(f"Custom Rule: {comment}") # Indicate custom rule
+                    reasons.append(f"Custom Rule: {comment}")
 
         # Extract gravity block reasons (blocklists)
         if "gravity" in search_data.get("search", {}):
             for gravity_entry in search_data["search"]["gravity"]:
                 list_comment = gravity_entry.get("comment")
                 if list_comment:
-                    reasons.append(f"{list_comment}") # List and comment
+                    reasons.append(f"{list_comment}")
 
 
         if reasons:
@@ -134,6 +141,8 @@ def get_pihole_block_reason(domain):
 @app.route('/')
 def blocked_page():
     domain = request.host
+    source_ip = request.remote_addr # Get source IP
+    blocked_domain_logger.info(f"{domain} from {source_ip}") # Log custom message
     pihole_reason = get_pihole_block_reason(domain)
     return render_template('index.html', domain=domain, pihole_reason=pihole_reason)
 
