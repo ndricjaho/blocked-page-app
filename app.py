@@ -1,3 +1,5 @@
+__version__ = "1.0.0"  # Start with version 1.0.0
+
 import logging
 from flask import Flask, request, render_template
 import requests
