@@ -13,6 +13,8 @@ This project provides a simple, customizable blocked page for Pi-hole, displayin
 *   **Efficient Session-Based API:**  Uses the Pi-hole v6 REST API session authentication for efficient and secure communication.
 *   **Clean Logging:**  Provides focused logs showing only blocked domain requests and source IPs.
 
+![Screenshot of the custom Pi-hole blocked page displaying block reasons](images/blocked-page-screenshot.png)
+
 ## Getting Started
 
 **Prerequisites:**
