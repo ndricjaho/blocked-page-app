@@ -4,26 +4,20 @@ import requests
 import os
 import time
 import urllib3
-import re  # Import the regular expression module
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 app = Flask(__name__)
 
-# Configure custom access logger (Werkzeug logs for static files etc.)
-access_log = logging.getLogger('werkzeug')
-access_log.handlers.clear()
-access_log.setLevel(logging.INFO)
-formatter = logging.Formatter('%(remote_addr)s - - [%(asctime)s] "%(request_url)s" %(status_code)s -')
-import sys
-stdout_handler = logging.StreamHandler(sys.stdout)
-stdout_handler.setFormatter(formatter)
-access_log.addHandler(stdout_handler)
+# Disable Werkzeug access logging completely
+werkzeug_log = logging.getLogger('werkzeug')
+werkzeug_log.disabled = True  # Disable the Werkzeug logger
 
-# Get logger for custom blocked domain logs
-blocked_domain_logger = logging.getLogger('blocked_domain_log') # Create a new logger
+
+# Get logger for custom blocked domain logs (keep this as before)
+blocked_domain_logger = logging.getLogger('blocked_domain_log')
 blocked_domain_logger.setLevel(logging.INFO)
-blocked_domain_formatter = logging.Formatter('%(message)s') # Simple formatter for blocked domain log
+blocked_domain_formatter = logging.Formatter('%(message)s')
 blocked_domain_handler = logging.StreamHandler(sys.stdout)
 blocked_domain_handler.setFormatter(blocked_domain_formatter)
 blocked_domain_logger.addHandler(blocked_domain_handler)
@@ -141,8 +135,8 @@ def get_pihole_block_reason(domain):
 @app.route('/')
 def blocked_page():
     domain = request.host
-    source_ip = request.remote_addr # Get source IP
-    blocked_domain_logger.info(f"{domain} from {source_ip}") # Log custom message
+    source_ip = request.remote_addr
+    blocked_domain_logger.info(f"{domain} from {source_ip}") # Keep custom logging
     pihole_reason = get_pihole_block_reason(domain)
     return render_template('index.html', domain=domain, pihole_reason=pihole_reason)
 
