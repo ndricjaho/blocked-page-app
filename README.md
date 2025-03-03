@@ -1,7 +1,7 @@
 # Pi-hole Custom Blocked Page with Reason Display
 
 [![GitHub release](https://img.shields.io/github/v/release/NdricJaho/Blocked-Page-App?sort=semver)](https://github.com/ndricjaho/blocked-page-app/releases/latest)
-[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE) ## Overview
+[![License](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 
 This project provides a simple, customizable blocked page for Pi-hole, displaying the reason why a domain is blocked, fetched directly from the Pi-hole v6 API.  Instead of a generic "This site is blocked," users will see details about the blocking lists or custom rules causing the block.
 
@@ -28,7 +28,7 @@ This project provides a simple, customizable blocked page for Pi-hole, displayin
 1.  **Clone the GitHub repository:**
     ```bash
     git clone https://github.com/ndricjaho/blocked-page-app
-    cd blocked-
+    cd blocked-page-app
 
 2.  **Create a `docker-compose.yml` file (if not already present).** Example `docker-compose.yml` (adjust as needed):
 
@@ -108,4 +108,4 @@ This project is licensed under the [MIT License](LICENSE) - see the [LICENSE](LI
 
 ## Author/Maintainer
 
-[Ndricim Jaho/ndricjaho]
+Ndricim Jaho/ndricjaho
