@@ -136,8 +136,8 @@ def get_pihole_block_reason(domain):
 
 
 
-@app.route('/')
-def blocked_page():
+@app.route('/<path:path>')
+def blocked_page(path):
     full_url = request.url  # Get the full requested URL
     parsed_url = urlparse(full_url) # Parse the URL
     domain = parsed_url.netloc  # Extract just the hostname (netloc)
