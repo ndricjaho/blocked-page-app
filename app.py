@@ -7,6 +7,7 @@ import os
 import time
 import urllib3
 import sys
+from urllib.parse import urlparse
 
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
@@ -137,9 +138,12 @@ def get_pihole_block_reason(domain):
 
 @app.route('/')
 def blocked_page():
-    domain = request.host
+    full_url = request.url  # Get the full requested URL
+    parsed_url = urlparse(full_url) # Parse the URL
+    domain = parsed_url.netloc  # Extract just the hostname (netloc)
+
     source_ip = request.remote_addr
-    blocked_domain_logger.info(f"{domain} from {source_ip}") # Keep custom logging
+    blocked_domain_logger.info(f"{domain} from {source_ip}")
     pihole_reason = get_pihole_block_reason(domain)
     return render_template('index.html', domain=domain, pihole_reason=pihole_reason)
 
