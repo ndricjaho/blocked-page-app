@@ -135,7 +135,7 @@ def get_pihole_block_reason(domain):
         return "Error decoding Pi-hole API response (search endpoint)."
 
 
-
+@app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
 def blocked_page(path):
     full_url = request.url  # Get the full requested URL
