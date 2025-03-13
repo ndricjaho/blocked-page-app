@@ -1,7 +1,7 @@
 __version__ = "1.0.0"  # Start with version 1.0.0
 
 import logging
-from flask import Flask, request, render_template
+from flask import Flask, request, render_template, jsonify
 import requests
 import os
 import time
@@ -133,6 +133,50 @@ def get_pihole_block_reason(domain):
         return f"Error querying Pi-hole API: {e}"
     except ValueError:
         return "Error decoding Pi-hole API response (search endpoint)."
+
+def call_pihole_api(params):
+    if not PIHOLE_PASSWORD:
+        logging.error("PIHOLE_PASSWORD environment variable not set.")
+        return None
+
+    params['auth'] = PIHOLE_PASSWORD
+    try:
+        response = requests.get(PIHOLE_API_URL, params=params, verify=False) # Consider verifying SSL in production
+        response.raise_for_status()  # Raise an exception for bad status codes
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        logging.error(f"Error calling Pi-hole API: {e}")
+        return None
+
+def update_pihole_domain(domain_type, kind, domain, comment=None):
+    params = {
+        'type': domain_type,
+        'kind': kind,
+        'domain': domain,
+        'comment': comment
+    }
+    return call_pihole_api(params)
+
+@app.route('/whitelist', methods=['POST'])
+def whitelist_domain():
+    if not PIHOLE_PASSWORD:
+        return jsonify({'success': False, 'error': 'Pi-hole API token not configured.'}), 401
+
+    data = request.get_json()
+    if not data or 'domain' not in data:
+        return jsonify({'success': False, 'error': 'Missing domain in request.'}), 400
+
+    domain_to_whitelist = data['domain']
+    comment = data.get('comment')
+
+    # Call the Pi-hole API to whitelist the domain
+    api_response = update_pihole_domain('allow', 'exact', domain_to_whitelist, comment)
+
+    if api_response and api_response.get('success'):
+        return jsonify({'success': True})
+    else:
+        error_message = api_response.get('message', 'Failed to whitelist domain.') if api_response else 'Failed to communicate with Pi-hole API.'
+        return jsonify({'success': False, 'error': error_message}), 500
 
 
 @app.route('/', defaults={'path': ''})

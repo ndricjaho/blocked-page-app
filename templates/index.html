@@ -24,6 +24,48 @@
         </div>
         {% endif %}
 
+        <h2>Want to Whitelist This Domain?</h2>
+        <form id="whitelistForm">
+            <p>Domain: <strong>{{ domain }}</strong></p>
+            <input type="hidden" id="domainToWhitelist" name="domain" value="{{ domain }}">
+            <div>
+                <label for="whitelistComment">Comment (Optional):</label><br>
+                <textarea id="whitelistComment" name="comment" rows="3" cols="40"></textarea>
+            </div>
+            <button type="button" onclick="whitelistDomain()">Whitelist Domain</button>
+            <div id="whitelistStatus" style="margin-top: 10px;"></div>
+        </form>
+
+        <script>
+            function whitelistDomain() {
+                const domain = document.getElementById('domainToWhitelist').value;
+                const comment = document.getElementById('whitelistComment').value;
+                const statusDiv = document.getElementById('whitelistStatus');
+
+                statusDiv.innerText = "Whitelisting...";
+
+                fetch('/whitelist', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ domain: domain, comment: comment })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        statusDiv.innerText = "Domain whitelisted successfully!";
+                        // Optionally, you could add a button to refresh the page or a message about changes taking effect.
+                    } else {
+                        statusDiv.innerText = "Error whitelisting domain: " + data.error;
+                    }
+                })
+                .catch(error => {
+                    statusDiv.innerText = "An unexpected error occurred: " + error;
+                });
+            }
+        </script>
+
         <p class="contact-admin">If you believe this is a mistake, please contact your administrator.</p>
     </div>
 </body>
